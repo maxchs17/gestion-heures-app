@@ -1,0 +1,307 @@
+{
+  "name": "Génération Facture Automatique - Complete",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-invoice",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 400],
+      "webhookId": "generate-invoice"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "1CglYfcmdFbKKOzrFdS1_vny6iDEyPl6A4-Fuc80HQ14",
+          "mode": "id"
+        },
+        "name": "=Facture {{$json.body.year}}-{{String($json.body.month).padStart(2, '0')}}",
+        "options": {
+          "parentId": "1ZQrJQNWXmElwD1zD5umjVrn9lZClYN2k"
+        }
+      },
+      "name": "Google Drive - Dupliquer Template",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [450, 400],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REMPLACER_PAR_TON_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{$node['Google Drive - Dupliquer Template'].json.id}}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Feuille 1",
+          "mode": "name"
+        },
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        },
+        "dataMode": "manual",
+        "cellsUi": {
+          "values": [
+            {
+              "column": "F9",
+              "value": "={{$json.body.invoiceNumber}}"
+            }
+          ]
+        }
+      },
+      "name": "Google Sheets - Numéro Facture",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [650, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REMPLACER_PAR_TON_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{$node['Google Drive - Dupliquer Template'].json.id}}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Feuille 1",
+          "mode": "name"
+        },
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        },
+        "dataMode": "manual",
+        "cellsUi": {
+          "values": [
+            {
+              "column": "F10",
+              "value": "={{$json.body.date}}"
+            }
+          ]
+        }
+      },
+      "name": "Google Sheets - Date",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [650, 400],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REMPLACER_PAR_TON_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{$node['Google Drive - Dupliquer Template'].json.id}}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Feuille 1",
+          "mode": "name"
+        },
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        },
+        "dataMode": "manual",
+        "cellsUi": {
+          "values": [
+            {
+              "column": "D16",
+              "value": "={{$json.body.totalHours}}"
+            }
+          ]
+        }
+      },
+      "name": "Google Sheets - Total Heures",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [650, 500],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REMPLACER_PAR_TON_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://docs.google.com/spreadsheets/d/{{$node['Google Drive - Dupliquer Template'].json.id}}/export?format=pdf",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "name": "HTTP Request - Export PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [850, 400],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REMPLACER_PAR_TON_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "maxchs17@gmail.com",
+        "subject": "=Facture {{$json.body.monthName}}",
+        "message": "=Bonjour Olivier,\n\nVoici la facture pour le mois de {{$json.body.monthName}}.\n\nDétails:\n- Total heures: {{$json.body.totalHours}}h\n- Taux horaire: {{$json.body.hourlyRate}}€/h\n- Montant total: {{$json.body.totalAmount}}€\n\nVous pouvez également consulter la facture en ligne:\nhttps://docs.google.com/spreadsheets/d/{{$node['Google Drive - Dupliquer Template'].json.id}}/edit\n\nCordialement,\nMaxence",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "data"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Gmail - Envoyer Facture",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1050, 400],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REMPLACER_PAR_TON_CREDENTIAL_GMAIL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retourner les informations de succès\nconst fileId = $node['Google Drive - Dupliquer Template'].json.id;\nconst fileUrl = `https://docs.google.com/spreadsheets/d/${fileId}/edit`;\n\nreturn {\n  json: {\n    success: true,\n    message: 'Facture générée et envoyée avec succès',\n    fileId: fileId,\n    fileUrl: fileUrl,\n    emailSent: true,\n    recipient: 'maxchs17@gmail.com',\n    invoiceData: $node['Webhook'].json.body\n  }\n};"
+      },
+      "name": "Code - Réponse Finale",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 400]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Google Drive - Dupliquer Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive - Dupliquer Template": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Numéro Facture",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Sheets - Date",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Sheets - Total Heures",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Numéro Facture": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Export PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Date": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Export PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Total Heures": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Export PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Export PDF": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Envoyer Facture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Envoyer Facture": {
+      "main": [
+        [
+          {
+            "node": "Code - Réponse Finale",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "versionId": "1"
+}

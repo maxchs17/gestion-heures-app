@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Clock, FileText, LogOut, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, FileText, LogOut, AlertCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { ModeToggle } from '@/components/mode-toggle';
+import { toast } from 'sonner';
 
 export default function ClientPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -46,8 +47,8 @@ export default function ClientPage() {
           const date = new Date(entry.date);
           const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
           entries[key] = {
-            start: entry.start_time,
-            end: entry.end_time,
+            start: entry.start_time.substring(0, 5),
+            end: entry.end_time.substring(0, 5),
           };
         });
 
@@ -69,6 +70,12 @@ export default function ClientPage() {
     } catch (error) {
       console.error('Erreur vérification demandes:', error);
     }
+  };
+
+  // Formater l'heure en HH:MM
+  const formatTime = (time: string) => {
+    if (!time) return '';
+    return time.substring(0, 5); // Prend seulement HH:MM
   };
 
   const calculateHours = (start: string, end: string) => {
@@ -151,13 +158,48 @@ export default function ClientPage() {
         if (result.success) {
           setHasPendingRequests(true);
           setEditingDay(null);
-          alert('Demande de modification envoyée à l\'admin');
+          toast.success('Demande de modification envoyée à Maxence');
         } else {
-          alert('Erreur lors de l\'envoi de la demande');
+          toast.error('Erreur lors de l\'envoi de la demande');
         }
       } catch (error) {
         console.error('Erreur envoi demande:', error);
-        alert('Erreur lors de l\'envoi de la demande');
+        toast.error('Erreur lors de l\'envoi de la demande');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const submitDeletionRequest = async () => {
+    if (editingDay) {
+      setLoading(true);
+      const date = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(editingDay).padStart(2, '0')}`;
+
+      try {
+        const response = await fetch('/api/modification-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            date,
+            start_time: '00:00',
+            end_time: '00:00',
+            comment: 'SUPPRESSION DEMANDÉE',
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          setHasPendingRequests(true);
+          setEditingDay(null);
+          toast.success('Demande de suppression envoyée à Maxence');
+        } else {
+          toast.error('Erreur lors de l\'envoi de la demande');
+        }
+      } catch (error) {
+        console.error('Erreur envoi demande:', error);
+        toast.error('Erreur lors de l\'envoi de la demande');
       } finally {
         setLoading(false);
       }
@@ -170,15 +212,37 @@ export default function ClientPage() {
     router.push('/login');
   };
 
-  const generateInvoice = () => {
+  const generateInvoice = async () => {
     if (hasPendingRequests) {
-      alert('Vous avez des demandes de modification en attente. Veuillez attendre la validation de l\'admin avant de générer la facture.');
+      toast.warning('Vous avez des demandes de modification en attente. Veuillez attendre la validation de Maxence avant de générer la facture.');
       return;
     }
 
-    const totalHours = getTotalHours();
+    setLoading(true);
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1;
     const monthName = currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-    alert(`Facture pour ${monthName}\n\nTotal d'heures: ${totalHours.toFixed(2)}h\n\nLa facture a été générée avec succès!`);
+
+    try {
+      const response = await fetch('/api/generate-invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year, month }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(`Facture pour ${monthName} générée avec succès! Total: ${result.data.totalHours}h - ${result.data.totalAmount}€`);
+      } else {
+        toast.error('Erreur lors de la génération de la facture');
+      }
+    } catch (error) {
+      console.error('Erreur génération facture:', error);
+      toast.error('Erreur lors de la génération de la facture');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderCalendar = () => {
@@ -212,7 +276,7 @@ export default function ClientPage() {
           {entry && (
             <div className="text-xs mt-1">
               <div className="text-muted-foreground">
-                {entry.start} - {entry.end}
+                {formatTime(entry.start)} - {formatTime(entry.end)}
               </div>
               <div className="text-primary font-semibold">{hours.toFixed(1)}h</div>
             </div>
@@ -231,6 +295,27 @@ export default function ClientPage() {
 
     return (
       <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={() => changeMonth(-1)}
+              size="sm"
+            >
+              ← Précédent
+            </Button>
+            <h2 className="text-xl font-semibold">
+              {currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+            </h2>
+            <Button
+              variant="outline"
+              onClick={() => changeMonth(1)}
+              size="sm"
+            >
+              Suivant →
+            </Button>
+          </div>
+        </CardHeader>
         <CardContent className="p-4">
           <div className="grid grid-cols-7 gap-1">
             {headers}
@@ -252,26 +337,11 @@ export default function ClientPage() {
                 <Calendar className="text-primary" size={32} />
                 <div>
                   <h1 className="text-3xl font-bold">Gestion des Heures</h1>
-                  <p className="text-sm text-muted-foreground">Espace Client</p>
+                  <p className="text-sm text-muted-foreground">Olivier</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <ModeToggle />
-                <Button
-                  variant="outline"
-                  onClick={() => changeMonth(-1)}
-                >
-                  ← Mois précédent
-                </Button>
-                <h2 className="text-xl font-semibold min-w-48 text-center">
-                  {currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-                </h2>
-                <Button
-                  variant="outline"
-                  onClick={() => changeMonth(1)}
-                >
-                  Mois suivant →
-                </Button>
                 <Button
                   variant="outline"
                   onClick={handleLogout}
@@ -295,7 +365,7 @@ export default function ClientPage() {
                     Demandes en attente de validation
                   </p>
                   <p className="text-sm text-orange-700 dark:text-orange-300">
-                    Vous ne pouvez pas générer de facture tant que l'admin n'a pas validé vos demandes.
+                    Vous ne pouvez pas générer de facture tant que Maxence n'a pas validé vos demandes.
                   </p>
                 </div>
               </div>
@@ -313,22 +383,20 @@ export default function ClientPage() {
               {/* Récapitulatif */}
               <Card className="border-2">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-end gap-4">
                     <Clock className="text-primary" size={40} />
-                    <div>
-                      <div className="text-sm text-muted-foreground">Total du mois</div>
-                      <div className="text-3xl font-bold text-primary">
-                        {getTotalHours().toFixed(2)}h
-                      </div>
+                    <div className="text-3xl font-bold text-primary">
+                      {getTotalHours().toFixed(2)}h
                     </div>
                   </div>
+                  <div className="text-sm text-muted-foreground mt-2">Total du mois</div>
                 </CardContent>
               </Card>
 
               {/* Bouton Générer facture */}
               <Button
                 onClick={generateInvoice}
-                variant="secondary"
+                variant="default"
                 className="h-full gap-3"
                 disabled={hasPendingRequests}
               >
@@ -392,8 +460,14 @@ export default function ClientPage() {
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingDay(null)} disabled={loading}>
-                Annuler
+              <Button
+                variant="destructive"
+                onClick={submitDeletionRequest}
+                disabled={loading}
+                className="gap-2"
+              >
+                <Trash2 size={16} />
+                Demander suppression
               </Button>
               <Button onClick={submitModificationRequest} disabled={loading}>
                 {loading ? 'Envoi...' : 'Envoyer la demande'}

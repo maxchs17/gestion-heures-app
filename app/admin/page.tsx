@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Clock, FileText, LogOut, Bell, Check, X } from 'lucide-react';
+import { Calendar, Clock, FileText, LogOut, Bell, Check, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { ModeToggle } from '@/components/mode-toggle';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 export default function TimesheetApp() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -47,8 +48,8 @@ export default function TimesheetApp() {
           const date = new Date(entry.date);
           const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
           entries[key] = {
-            start: entry.start_time,
-            end: entry.end_time,
+            start: entry.start_time.substring(0, 5),
+            end: entry.end_time.substring(0, 5),
           };
         });
 
@@ -87,13 +88,13 @@ export default function TimesheetApp() {
         // Recharger les données
         await loadModificationRequests();
         await loadTimeEntries();
-        alert(action === 'approved' ? 'Demande approuvée' : 'Demande rejetée');
+        toast.success(action === 'approved' ? 'Demande approuvée' : 'Demande rejetée');
       } else {
-        alert('Erreur lors du traitement de la demande');
+        toast.error('Erreur lors du traitement de la demande');
       }
     } catch (error) {
       console.error('Erreur traitement demande:', error);
-      alert('Erreur lors du traitement de la demande');
+      toast.error('Erreur lors du traitement de la demande');
     } finally {
       setLoading(false);
     }
@@ -111,6 +112,12 @@ export default function TimesheetApp() {
     const year = date.getFullYear();
     const month = date.getMonth();
     return new Date(year, month, 1).getDay();
+  };
+
+  // Formater l'heure en HH:MM
+  const formatTime = (time: string) => {
+    if (!time) return '';
+    return time.substring(0, 5); // Prend seulement HH:MM
   };
 
   // Calculer les heures travaillées
@@ -163,12 +170,45 @@ export default function TimesheetApp() {
             [key]: { start: startTime, end: endTime }
           });
           setEditingDay(null);
+          toast.success('Horaires sauvegardés avec succès');
         } else {
-          alert('Erreur lors de la sauvegarde des horaires');
+          toast.error('Erreur lors de la sauvegarde des horaires');
         }
       } catch (error) {
         console.error('Erreur sauvegarde:', error);
-        alert('Erreur lors de la sauvegarde des horaires');
+        toast.error('Erreur lors de la sauvegarde des horaires');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // Supprimer un horaire
+  const deleteTimeEntry = async () => {
+    if (editingDay) {
+      setLoading(true);
+      const date = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(editingDay).padStart(2, '0')}`;
+      const key = `${currentDate.getFullYear()}-${currentDate.getMonth()}-${editingDay}`;
+
+      try {
+        const response = await fetch(`/api/time-entries?date=${date}`, {
+          method: 'DELETE',
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          const newEntries = { ...timeEntries };
+          delete newEntries[key];
+          setTimeEntries(newEntries);
+          setEditingDay(null);
+          toast.success('Service supprimé avec succès');
+        } else {
+          toast.error('Erreur lors de la suppression');
+        }
+      } catch (error) {
+        console.error('Erreur suppression:', error);
+        toast.error('Erreur lors de la suppression');
       } finally {
         setLoading(false);
       }
@@ -190,11 +230,32 @@ export default function TimesheetApp() {
   };
 
   // Générer la facture
-  const generateInvoice = () => {
-    const totalHours = getTotalHours();
+  const generateInvoice = async () => {
+    setLoading(true);
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1;
     const monthName = currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
-    alert(`Facture pour ${monthName}\n\nTotal d'heures: ${totalHours.toFixed(2)}h\n\nLa facture a été générée avec succès!`);
+    try {
+      const response = await fetch('/api/generate-invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year, month }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(`Facture pour ${monthName} générée avec succès! Total: ${result.data.totalHours}h - ${result.data.totalAmount}€`);
+      } else {
+        toast.error('Erreur lors de la génération de la facture');
+      }
+    } catch (error) {
+      console.error('Erreur génération facture:', error);
+      toast.error('Erreur lors de la génération de la facture');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Changer de mois
@@ -246,7 +307,7 @@ export default function TimesheetApp() {
           {entry && (
             <div className="text-xs mt-1">
               <div className="text-muted-foreground">
-                {entry.start} - {entry.end}
+                {formatTime(entry.start)} - {formatTime(entry.end)}
               </div>
               <div className="text-primary font-semibold">{hours.toFixed(1)}h</div>
             </div>
@@ -266,6 +327,27 @@ export default function TimesheetApp() {
 
     return (
       <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={() => changeMonth(-1)}
+              size="sm"
+            >
+              ← Précédent
+            </Button>
+            <h2 className="text-xl font-semibold">
+              {currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+            </h2>
+            <Button
+              variant="outline"
+              onClick={() => changeMonth(1)}
+              size="sm"
+            >
+              Suivant →
+            </Button>
+          </div>
+        </CardHeader>
         <CardContent className="p-4">
           <div className="grid grid-cols-7 gap-1">
             {headers}
@@ -287,7 +369,7 @@ export default function TimesheetApp() {
                 <Calendar className="text-primary" size={32} />
                 <div>
                   <h1 className="text-3xl font-bold">Gestion des Heures</h1>
-                  <p className="text-sm text-muted-foreground">Espace Admin</p>
+                  <p className="text-sm text-muted-foreground">Maxence</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -304,21 +386,6 @@ export default function TimesheetApp() {
                       {modificationRequests.length}
                     </Badge>
                   )}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => changeMonth(-1)}
-                >
-                  ← Mois précédent
-                </Button>
-                <h2 className="text-xl font-semibold min-w-48 text-center">
-                  {currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-                </h2>
-                <Button
-                  variant="outline"
-                  onClick={() => changeMonth(1)}
-                >
-                  Mois suivant →
                 </Button>
                 <Button
                   variant="outline"
@@ -339,26 +406,37 @@ export default function TimesheetApp() {
         {/* Récapitulatif et actions */}
         <Card className="mt-6">
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Récapitulatif */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Récapitulatif heures */}
               <Card className="border-2">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-end gap-4">
                     <Clock className="text-primary" size={40} />
-                    <div>
-                      <div className="text-sm text-muted-foreground">Total du mois</div>
-                      <div className="text-3xl font-bold text-primary">
-                        {getTotalHours().toFixed(2)}h
-                      </div>
+                    <div className="text-3xl font-bold text-primary">
+                      {getTotalHours().toFixed(2)}h
                     </div>
                   </div>
+                  <div className="text-sm text-muted-foreground mt-2">Total du mois</div>
+                </CardContent>
+              </Card>
+
+              {/* Récapitulatif euros */}
+              <Card className="border-2">
+                <CardContent className="p-4">
+                  <div className="flex items-end gap-4">
+                    <div className="text-primary text-4xl font-bold">€</div>
+                    <div className="text-3xl font-bold">
+                      {(getTotalHours() * 15).toFixed(2)}€
+                    </div>
+                  </div>
+                  <div className="text-sm text-muted-foreground mt-2">Revenu du mois</div>
                 </CardContent>
               </Card>
 
               {/* Bouton Générer facture */}
               <Button
                 onClick={generateInvoice}
-                variant="secondary"
+                variant="default"
                 className="h-full gap-3"
               >
                 <FileText size={24} />
@@ -409,8 +487,14 @@ export default function TimesheetApp() {
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingDay(null)} disabled={loading}>
-                Annuler
+              <Button
+                variant="destructive"
+                onClick={deleteTimeEntry}
+                disabled={loading}
+                className="gap-2"
+              >
+                <Trash2 size={16} />
+                Supprimer
               </Button>
               <Button onClick={saveTimeEntry} disabled={loading}>
                 {loading ? 'Enregistrement...' : 'Enregistrer'}
@@ -453,7 +537,7 @@ export default function TimesheetApp() {
                               <div className="flex items-center gap-2">
                                 <Clock size={16} className="text-muted-foreground" />
                                 <span>
-                                  {request.start_time} - {request.end_time}
+                                  {formatTime(request.start_time)} - {formatTime(request.end_time)}
                                 </span>
                                 <Badge variant="secondary">{hours.toFixed(2)}h</Badge>
                               </div>

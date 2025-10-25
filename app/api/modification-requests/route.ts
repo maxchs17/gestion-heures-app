@@ -84,40 +84,48 @@ export async function PATCH(request: NextRequest) {
     if (status === 'approved') {
       const { data: request_data } = await supabase
         .from('modification_requests')
-        .select('date, start_time, end_time')
+        .select('date, start_time, end_time, comment')
         .eq('id', id)
         .single();
 
       if (request_data) {
-        // Vérifier si une entrée existe déjà pour cette date
-        const { data: existing } = await supabase
-          .from('time_entries')
-          .select('id')
-          .eq('date', request_data.date)
-          .single();
-
-        if (existing) {
-          // Mettre à jour
+        // Si c'est une demande de suppression
+        if (request_data.comment === 'SUPPRESSION DEMANDÉE') {
           await supabase
             .from('time_entries')
-            .update({
-              start_time: request_data.start_time,
-              end_time: request_data.end_time,
-              status: 'approved',
-              updated_at: new Date().toISOString(),
-            })
+            .delete()
             .eq('date', request_data.date);
         } else {
-          // Créer
-          await supabase
+          // Vérifier si une entrée existe déjà pour cette date
+          const { data: existing } = await supabase
             .from('time_entries')
-            .insert({
-              date: request_data.date,
-              start_time: request_data.start_time,
-              end_time: request_data.end_time,
-              status: 'approved',
-              created_by: 'client',
-            });
+            .select('id')
+            .eq('date', request_data.date)
+            .single();
+
+          if (existing) {
+            // Mettre à jour
+            await supabase
+              .from('time_entries')
+              .update({
+                start_time: request_data.start_time,
+                end_time: request_data.end_time,
+                status: 'approved',
+                updated_at: new Date().toISOString(),
+              })
+              .eq('date', request_data.date);
+          } else {
+            // Créer
+            await supabase
+              .from('time_entries')
+              .insert({
+                date: request_data.date,
+                start_time: request_data.start_time,
+                end_time: request_data.end_time,
+                status: 'approved',
+                created_by: 'client',
+              });
+          }
         }
       }
     }

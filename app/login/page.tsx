@@ -97,8 +97,8 @@ export default function LoginPage() {
 
             <div className="text-xs text-muted-foreground text-center pt-4">
               <p>Comptes de test :</p>
-              <p>Admin: admin / admin123</p>
-              <p>Client: client / client123</p>
+              <p>Maxence: admin / admin123</p>
+              <p>Olivier: client / client123</p>
             </div>
           </form>
         </CardContent>

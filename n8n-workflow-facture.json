@@ -1,0 +1,230 @@
+{
+  "name": "Génération Facture Automatique",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-invoice",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "generate-invoice"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "REMPLACER_PAR_TON_TEMPLATE_ID",
+          "mode": "id"
+        },
+        "name": "=Facture {{$json.body.year}}-{{$json.body.month}}",
+        "options": {}
+      },
+      "name": "Google Drive - Dupliquer Template",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [450, 300],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REMPLACER_PAR_TON_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{$node['Google Drive - Dupliquer Template'].json.id}}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        },
+        "dataMode": "manual",
+        "cellsUi": {
+          "values": [
+            {
+              "column": "F9",
+              "value": "={{$json.body.invoiceNumber}}"
+            }
+          ]
+        }
+      },
+      "name": "Google Sheets - Numéro Facture",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [650, 200],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REMPLACER_PAR_TON_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{$node['Google Drive - Dupliquer Template'].json.id}}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        },
+        "dataMode": "manual",
+        "cellsUi": {
+          "values": [
+            {
+              "column": "F10",
+              "value": "={{$json.body.date}}"
+            }
+          ]
+        }
+      },
+      "name": "Google Sheets - Date",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [650, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REMPLACER_PAR_TON_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{$node['Google Drive - Dupliquer Template'].json.id}}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        },
+        "dataMode": "manual",
+        "cellsUi": {
+          "values": [
+            {
+              "column": "D16",
+              "value": "={{$json.body.totalHours}}"
+            }
+          ]
+        }
+      },
+      "name": "Google Sheets - Total Heures",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [650, 400],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REMPLACER_PAR_TON_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retourner le lien vers la facture générée\nconst fileId = $node['Google Drive - Dupliquer Template'].json.id;\nconst fileUrl = `https://docs.google.com/spreadsheets/d/${fileId}/edit`;\n\nreturn {\n  json: {\n    success: true,\n    message: 'Facture générée avec succès',\n    fileId: fileId,\n    fileUrl: fileUrl,\n    invoiceData: $json.body\n  }\n};"
+      },
+      "name": "Code - Réponse",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Google Drive - Dupliquer Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive - Dupliquer Template": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Numéro Facture",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Sheets - Date",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Sheets - Total Heures",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Numéro Facture": {
+      "main": [
+        [
+          {
+            "node": "Code - Réponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Date": {
+      "main": [
+        [
+          {
+            "node": "Code - Réponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Total Heures": {
+      "main": [
+        [
+          {
+            "node": "Code - Réponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

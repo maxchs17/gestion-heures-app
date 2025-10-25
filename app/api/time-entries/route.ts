@@ -74,3 +74,33 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// DELETE - Supprimer un horaire
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const date = searchParams.get('date');
+
+    if (!date) {
+      return NextResponse.json(
+        { error: 'Date requise' },
+        { status: 400 }
+      );
+    }
+
+    const { error } = await supabase
+      .from('time_entries')
+      .delete()
+      .eq('date', date);
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Erreur DELETE time_entries:', error);
+    return NextResponse.json(
+      { error: 'Erreur lors de la suppression de l\'horaire' },
+      { status: 500 }
+    );
+  }
+}
