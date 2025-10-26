@@ -137,10 +137,18 @@ export default function TimesheetApp() {
     return Math.max(0, endTotal - startTotal);
   };
 
-  // Calculer le total d'heures du mois
+  // Calculer le total d'heures du mois affiché
   const getTotalHours = () => {
-    return Object.values(timeEntries).reduce((total, entry) => {
-      return total + calculateHours(entry.start, entry.end);
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+
+    return Object.entries(timeEntries).reduce((total, [key, entry]) => {
+      const [year, month] = key.split('-').map(Number);
+      // Ne compter que les entrées du mois affiché
+      if (year === currentYear && month === currentMonth) {
+        return total + calculateHours(entry.start, entry.end);
+      }
+      return total;
     }, 0);
   };
 

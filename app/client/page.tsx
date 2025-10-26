@@ -93,11 +93,13 @@ export default function ClientPage() {
   };
 
   const getTotalHours = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
 
     return Object.entries(timeEntries).reduce((total, [key, entry]) => {
-      if (key.startsWith(`${year}-${month}-`)) {
+      const [year, month] = key.split('-').map(Number);
+      // Ne compter que les entrées du mois affiché
+      if (year === currentYear && month === currentMonth) {
         return total + calculateHours(entry.start, entry.end);
       }
       return total;
