@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Clock, FileText, LogOut, AlertCircle, Trash2 } from 'lucide-react';
+import { Calendar, Clock, FileText, LogOut, AlertCircle, Trash2, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -20,6 +20,9 @@ export default function ClientPage() {
   const [comment, setComment] = useState('');
   const [hasPendingRequests, setHasPendingRequests] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [invoiceData, setInvoiceData] = useState<{ totalHours: string; totalAmount: string; monthName: string } | null>(null);
+  const [ibanCopied, setIbanCopied] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -208,6 +211,13 @@ export default function ClientPage() {
     }
   };
 
+  const copyIban = () => {
+    navigator.clipboard.writeText('FR7640618803510004045462651');
+    setIbanCopied(true);
+    setTimeout(() => setIbanCopied(false), 2000);
+    toast.success('IBAN copié dans le presse-papier');
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user_role');
@@ -235,7 +245,13 @@ export default function ClientPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success(`Facture pour ${monthName} générée avec succès! Total: ${result.data.totalHours}h - ${result.data.totalAmount}€`);
+        setInvoiceData({
+          totalHours: result.data.totalHours,
+          totalAmount: result.data.totalAmount,
+          monthName: monthName,
+        });
+        setShowInvoiceDialog(true);
+        toast.success(`Facture pour ${monthName} générée avec succès!`);
       } else {
         toast.error('Erreur lors de la génération de la facture');
       }
@@ -473,6 +489,62 @@ export default function ClientPage() {
               </Button>
               <Button onClick={submitModificationRequest} disabled={loading}>
                 {loading ? 'Envoi...' : 'Envoyer la demande'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de confirmation de facture */}
+        <Dialog open={showInvoiceDialog} onOpenChange={setShowInvoiceDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl">Facture envoyée !</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                <Check size={20} />
+                <span className="font-medium">La facture a été envoyée par email</span>
+              </div>
+
+              {invoiceData && (
+                <div className="space-y-3 rounded-lg bg-muted p-4">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Période :</span>
+                    <span className="font-medium">{invoiceData.monthName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total heures :</span>
+                    <span className="font-medium">{invoiceData.totalHours}h</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Montant :</span>
+                    <span className="font-semibold text-lg">{invoiceData.totalAmount}€</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">IBAN pour le paiement</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value="FR76 4061 8803 5100 0404 5462 651"
+                    readOnly
+                    className="font-mono text-sm"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={copyIban}
+                    className="shrink-0"
+                  >
+                    {ibanCopied ? <Check size={18} /> : <Copy size={18} />}
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setShowInvoiceDialog(false)}>
+                Fermer
               </Button>
             </DialogFooter>
           </DialogContent>
