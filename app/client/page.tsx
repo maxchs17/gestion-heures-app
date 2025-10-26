@@ -429,7 +429,7 @@ export default function ClientPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="end-time">Heure de fin (si ≤ 06h, compte pour le lendemain)</Label>
+                <Label htmlFor="end-time">Heure de fin</Label>
                 <Input
                   id="end-time"
                   type="time"
