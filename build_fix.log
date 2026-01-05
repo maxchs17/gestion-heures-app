@@ -1,0 +1,140 @@
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  475.6kB
+Step 1/28 : FROM node:20-alpine AS base
+ ---> 9992b59c17bf
+Step 2/28 : FROM base AS deps
+ ---> 9992b59c17bf
+Step 3/28 : RUN apk add --no-cache libc6-compat
+ ---> Using cache
+ ---> 633072ab08b4
+Step 4/28 : WORKDIR /app
+ ---> Using cache
+ ---> 585d52a135cc
+Step 5/28 : COPY package*.json ./
+ ---> Using cache
+ ---> 23a038fd2074
+Step 6/28 : RUN npm ci
+ ---> Using cache
+ ---> 2ffad68f40ac
+Step 7/28 : FROM base AS builder
+ ---> 9992b59c17bf
+Step 8/28 : WORKDIR /app
+ ---> Using cache
+ ---> 147ec403ad22
+Step 9/28 : ARG NEXT_PUBLIC_SUPABASE_URL
+ ---> Using cache
+ ---> 9d9b5b4c6f4e
+Step 10/28 : ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ ---> Using cache
+ ---> 48b432158552
+Step 11/28 : ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ ---> Running in 13155ff3b811
+ ---> Removed intermediate container 13155ff3b811
+ ---> 0e7e8735e714
+Step 12/28 : ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ ---> Running in e2bba770e19f
+ ---> Removed intermediate container e2bba770e19f
+ ---> 9958258d3f0e
+Step 13/28 : COPY --from=deps /app/node_modules ./node_modules
+ ---> 7442a57868bc
+Step 14/28 : COPY . .
+ ---> 838250d5da49
+Step 15/28 : RUN npm run build
+ ---> Running in 0208cd436a35
+
+> gestion-heures-app@0.1.0 build
+> next build
+
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+   ▲ Next.js 16.0.7 (Turbopack)
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 119s
+   Running TypeScript ...
+   Collecting page data using 1 worker ...
+   Generating static pages using 1 worker (0/13) ...
+   Generating static pages using 1 worker (3/13) 
+   Generating static pages using 1 worker (6/13) 
+   Generating static pages using 1 worker (9/13) 
+ ✓ Generating static pages using 1 worker (13/13) in 7.8s
+   Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /admin
+├ ƒ /api/auth/change-password
+├ ƒ /api/auth/login
+├ ƒ /api/generate-invoice
+├ ƒ /api/modification-requests
+├ ƒ /api/settings
+├ ƒ /api/time-entries
+├ ○ /client
+└ ○ /login
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+[91mnpm notice
+npm notice New major version of npm available! 10.8.2 -> 11.7.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+npm notice To update run: npm install -g npm@11.7.0
+npm notice
+[0m ---> Removed intermediate container 0208cd436a35
+ ---> be96d798ec17
+Step 16/28 : FROM base AS runner
+ ---> 9992b59c17bf
+Step 17/28 : WORKDIR /app
+ ---> Using cache
+ ---> 147ec403ad22
+Step 18/28 : ENV NODE_ENV=production
+ ---> Running in 4108dc32fdb9
+ ---> Removed intermediate container 4108dc32fdb9
+ ---> 171fb8ce75dd
+Step 19/28 : RUN addgroup --system --gid 1001 nodejs
+ ---> Running in cd890350d609
+ ---> Removed intermediate container cd890350d609
+ ---> 711d35243ebf
+Step 20/28 : RUN adduser --system --uid 1001 nextjs
+ ---> Running in b75db42822cc
+ ---> Removed intermediate container b75db42822cc
+ ---> ac116f49d10a
+Step 21/28 : COPY --from=builder /app/public ./public
+ ---> 28af4b772c2f
+Step 22/28 : COPY --from=builder /app/.next/standalone ./
+ ---> 508ee91a5490
+Step 23/28 : COPY --from=builder /app/.next/static ./.next/static
+ ---> 56ce5f4befa6
+Step 24/28 : USER nextjs
+ ---> Running in a3dac1dc6ee5
+ ---> Removed intermediate container a3dac1dc6ee5
+ ---> 2b132f72cdba
+Step 25/28 : EXPOSE 3000
+ ---> Running in f2e63f510a17
+ ---> Removed intermediate container f2e63f510a17
+ ---> 012aefacfb67
+Step 26/28 : ENV PORT=3000
+ ---> Running in 68770b1a906c
+ ---> Removed intermediate container 68770b1a906c
+ ---> b047af0fe997
+Step 27/28 : ENV HOSTNAME="0.0.0.0"
+ ---> Running in 972cf56121e8
+ ---> Removed intermediate container 972cf56121e8
+ ---> 9be99fd32297
+Step 28/28 : CMD ["node", "server.js"]
+ ---> Running in bfa1c892cc22
+ ---> Removed intermediate container bfa1c892cc22
+ ---> eba04de6683e
+Successfully built eba04de6683e
+Successfully tagged gestion-heures-app:latest
+Error response from daemon: No such container: gestion-heures-app
+Error response from daemon: No such container: gestion-heures-app
+1db5cb3fe918ad5b02bb23a2c2cf9388d92d952ab7ca378ea4558fb8d9ff16a7

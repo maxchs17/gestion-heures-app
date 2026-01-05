@@ -1,0 +1,143 @@
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  467.5kB
+Step 1/28 : FROM node:20-alpine AS base
+ ---> 9992b59c17bf
+Step 2/28 : FROM base AS deps
+ ---> 9992b59c17bf
+Step 3/28 : RUN apk add --no-cache libc6-compat
+ ---> Using cache
+ ---> 633072ab08b4
+Step 4/28 : WORKDIR /app
+ ---> Using cache
+ ---> 585d52a135cc
+Step 5/28 : COPY package*.json ./
+ ---> Using cache
+ ---> 23a038fd2074
+Step 6/28 : RUN npm ci
+ ---> Using cache
+ ---> 2ffad68f40ac
+Step 7/28 : FROM base AS builder
+ ---> 9992b59c17bf
+Step 8/28 : WORKDIR /app
+ ---> Using cache
+ ---> 147ec403ad22
+Step 9/28 : ARG NEXT_PUBLIC_SUPABASE_URL
+ ---> Using cache
+ ---> 9d9b5b4c6f4e
+Step 10/28 : ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ ---> Using cache
+ ---> 48b432158552
+Step 11/28 : ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ ---> Using cache
+ ---> 83063dcd5724
+Step 12/28 : ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ ---> Using cache
+ ---> dd11037bf25d
+Step 13/28 : COPY --from=deps /app/node_modules ./node_modules
+ ---> Using cache
+ ---> be3f4713b4d6
+Step 14/28 : COPY . .
+ ---> 6dd5478a401f
+Step 15/28 : RUN npm run build
+ ---> Running in 2e042002faa3
+
+> gestion-heures-app@0.1.0 build
+> next build
+
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+   ▲ Next.js 16.0.7 (Turbopack)
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 95s
+   Running TypeScript ...
+   Collecting page data using 1 worker ...
+[91mError: supabaseUrl is required.
+    at <unknown> (.next/server/chunks/_80e9d57e._.js:34:36783)
+    at new e (.next/server/chunks/_80e9d57e._.js:34:37034)
+    at module evaluation (.next/server/chunks/_80e9d57e._.js:34:36642)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:715:9)
+    at getOrInstantiateModuleFromParent (.next/server/chunks/[turbopack]_runtime.js:738:12)
+    at Context.esmImport [as i] (.next/server/chunks/[turbopack]_runtime.js:228:20)
+    at module evaluation (.next/server/chunks/[root-of-the-server]__3fbd7e0e._.js:1:1280)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:715:9)
+    at instantiateRuntimeModule (.next/server/chunks/[turbopack]_runtime.js:743:12)
+    at getOrInstantiateRuntimeModule (.next/server/chunks/[turbopack]_runtime.js:756:12)
+[0m[91mError: supabaseUrl is required.
+    at <unknown> (.next/server/chunks/_80e9d57e._.js:34:36783)
+    at new e (.next/server/chunks/_80e9d57e._.js:34:37034)
+    at module evaluation (.next/server/chunks/_80e9d57e._.js:34:36642)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:715:9)
+    at getOrInstantiateModuleFromParent (.next/server/chunks/[turbopack]_runtime.js:738:12)
+    at Context.esmImport [as i] (.next/server/chunks/[turbopack]_runtime.js:228:20)
+    at module evaluation (.next/server/chunks/[root-of-the-server]__3fbd7e0e._.js:1:1280)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:715:9)
+    at instantiateRuntimeModule (.next/server/chunks/[turbopack]_runtime.js:743:12)
+    at getOrInstantiateRuntimeModule (.next/server/chunks/[turbopack]_runtime.js:756:12)
+[0m[91mError: supabaseUrl is required.
+    at <unknown> (.next/server/chunks/_80e9d57e._.js:34:36783)
+    at new e (.next/server/chunks/_80e9d57e._.js:34:37034)
+    at module evaluation (.next/server/chunks/_80e9d57e._.js:34:36642)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:715:9)
+    at getOrInstantiateModuleFromParent (.next/server/chunks/[turbopack]_runtime.js:738:12)
+    at Context.esmImport [as i] (.next/server/chunks/[turbopack]_runtime.js:228:20)
+    at module evaluation (.next/server/chunks/[root-of-the-server]__3fbd7e0e._.js:1:1280)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:715:9)
+    at instantiateRuntimeModule (.next/server/chunks/[turbopack]_runtime.js:743:12)
+    at getOrInstantiateRuntimeModule (.next/server/chunks/[turbopack]_runtime.js:756:12)
+[0m[91mError: supabaseUrl is required.
+    at <unknown> (.next/server/chunks/_80e9d57e._.js:34:36783)
+    at new e (.next/server/chunks/_80e9d57e._.js:34:37034)
+    at module evaluation (.next/server/chunks/_80e9d57e._.js:34:36642)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:715:9)
+    at getOrInstantiateModuleFromParent (.next/server/chunks/[turbopack]_runtime.js:738:12)
+    at Context.esmImport [as i] (.next/server/chunks/[turbopack]_runtime.js:228:20)
+    at module evaluation (.next/server/chunks/[root-of-the-server]__3fbd7e0e._.js:1:1280)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:715:9)
+    at instantiateRuntimeModule (.next/server/chunks/[turbopack]_runtime.js:743:12)
+    at getOrInstantiateRuntimeModule (.next/server/chunks/[turbopack]_runtime.js:756:12)
+[0m[91mError: supabaseUrl is required.
+    at <unknown> (.next/server/chunks/_80e9d57e._.js:34:36783)
+    at new e (.next/server/chunks/_80e9d57e._.js:34:37034)
+    at module evaluation (.next/server/chunks/_80e9d57e._.js:34:36642)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:715:9)
+    at getOrInstantiateModuleFromParent (.next/server/chunks/[turbopack]_runtime.js:738:12)
+    at Context.esmImport [as i] (.next/server/chunks/[turbopack]_runtime.js:228:20)
+    at module evaluation (.next/server/chunks/[root-of-the-server]__3fbd7e0e._.js:1:1280)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:715:9)
+    at instantiateRuntimeModule (.next/server/chunks/[turbopack]_runtime.js:743:12)
+    at getOrInstantiateRuntimeModule (.next/server/chunks/[turbopack]_runtime.js:756:12)
+[0m[91mError: supabaseUrl is required.
+    at <unknown> (.next/server/chunks/_80e9d57e._.js:34:36783)
+    at new e (.next/server/chunks/_80e9d57e._.js:34:37034)
+    at module evaluation (.next/server/chunks/_80e9d57e._.js:34:36642)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:715:9)
+    at getOrInstantiateModuleFromParent (.next/server/chunks/[turbopack]_runtime.js:738:12)
+    at Context.esmImport [as i] (.next/server/chunks/[turbopack]_runtime.js:228:20)
+    at module evaluation (.next/server/chunks/[root-of-the-server]__3fbd7e0e._.js:1:1280)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:715:9)
+    at instantiateRuntimeModule (.next/server/chunks/[turbopack]_runtime.js:743:12)
+    at getOrInstantiateRuntimeModule (.next/server/chunks/[turbopack]_runtime.js:756:12)
+[0m[91m
+> Build error occurred
+[0m[91mError: Failed to collect page data for /api/auth/change-password
+    at ignore-listed frames {
+  type: 'Error'
+}
+[0m[91mnpm notice
+npm notice New major version of npm available! 10.8.2 -> 11.7.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+npm notice To update run: npm install -g npm@11.7.0
+npm notice
+[0mThe command '/bin/sh -c npm run build' returned a non-zero code: 1
+Error response from daemon: No such container: gestion-heures-app
+Unable to find image 'gestion-heures-app:latest' locally
+docker: Error response from daemon: pull access denied for gestion-heures-app, repository does not exist or may require 'docker login': denied: requested access to the resource is denied
+
+Run 'docker run --help' for more information

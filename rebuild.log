@@ -1,0 +1,157 @@
+gestion-heures-app
+gestion-heures-app
+Untagged: gestion-heures-app:latest
+Deleted: sha256:eba04de6683ef8edcd97879e7c895aae6131b2fd066868dc8381b3b2bfbdd046
+Deleted: sha256:9be99fd322976a9b6f1ec0c35b200d91d6881fb4d8eb383c6f6c3fdccd6ce514
+Deleted: sha256:b047af0fe997b01639738586115d8f16c2f3223e881ddb54d42d70aa5d3382e2
+Deleted: sha256:012aefacfb67981a6a755799200fce8a1fdbf03f8f897b03124c4843c25bf04d
+Deleted: sha256:2b132f72cdba7dd3d3faafe73eb68aea7a5209e137dfb5c75cbe646554742f99
+Deleted: sha256:56ce5f4befa627afdf933b7ca5aad5c9104b05c73c4be020700581780dc88f4c
+Deleted: sha256:368cd7e438072a2d5cf30564bcce3aac00ac46eb90a048644730f209e7cc84d3
+Deleted: sha256:508ee91a549022a3f21ec6709c07719247e61ad0a2d66a711ace8c7f2c1c5812
+Deleted: sha256:b56eaa61e588c00797eb1de91a9302ec66f579397f877140d81e0f61539c9c22
+Deleted: sha256:28af4b772c2fdedcb00b997ed972b9dba5d24b0662dc1e5cfcc437f20f66332f
+Deleted: sha256:930461cf04823fecf5f8f7caa6b903418bdb53e5c7bd53d41d394ebd5640e110
+Deleted: sha256:ac116f49d10a06da9f26b080c929c10ffd965bcd8527b26c80daa65a24269d57
+Deleted: sha256:a321ebd7601e4713367ce746db54b9a7e1a909a3bbb8d6ba458bbbab6b9fd6fd
+Deleted: sha256:711d35243ebfe4cf338065ca893a22f90146d08af7fc950d724021800f082f80
+Deleted: sha256:0dc5f7dad1f38b01c86642e0f76c3d0b519eb261778c9e2b8aa8c142301c5281
+Deleted: sha256:171fb8ce75dd960b090385f2adcd3a7060b762667c9fff8417b7fcd5edffe6c6
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  484.4kB
+Step 1/28 : FROM node:20-alpine AS base
+ ---> 9992b59c17bf
+Step 2/28 : FROM base AS deps
+ ---> 9992b59c17bf
+Step 3/28 : RUN apk add --no-cache libc6-compat
+ ---> Using cache
+ ---> 633072ab08b4
+Step 4/28 : WORKDIR /app
+ ---> Using cache
+ ---> 585d52a135cc
+Step 5/28 : COPY package*.json ./
+ ---> Using cache
+ ---> 23a038fd2074
+Step 6/28 : RUN npm ci
+ ---> Using cache
+ ---> 2ffad68f40ac
+Step 7/28 : FROM base AS builder
+ ---> 9992b59c17bf
+Step 8/28 : WORKDIR /app
+ ---> Using cache
+ ---> 147ec403ad22
+Step 9/28 : ARG NEXT_PUBLIC_SUPABASE_URL
+ ---> Using cache
+ ---> 9d9b5b4c6f4e
+Step 10/28 : ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ ---> Using cache
+ ---> 48b432158552
+Step 11/28 : ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ ---> Running in f7e9398d15df
+ ---> Removed intermediate container f7e9398d15df
+ ---> 14d2cb59e178
+Step 12/28 : ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ ---> Running in 76881759b3a9
+ ---> Removed intermediate container 76881759b3a9
+ ---> bc58f6fa7108
+Step 13/28 : COPY --from=deps /app/node_modules ./node_modules
+ ---> 88d1247aee7f
+Step 14/28 : COPY . .
+ ---> 0052e752b6ad
+Step 15/28 : RUN npm run build
+ ---> Running in 9c8bcfcdce0a
+
+> gestion-heures-app@0.1.0 build
+> next build
+
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+   ▲ Next.js 16.0.7 (Turbopack)
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 58s
+   Running TypeScript ...
+   Collecting page data using 1 worker ...
+   Generating static pages using 1 worker (0/13) ...
+   Generating static pages using 1 worker (3/13) 
+   Generating static pages using 1 worker (6/13) 
+   Generating static pages using 1 worker (9/13) 
+ ✓ Generating static pages using 1 worker (13/13) in 5.0s
+   Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /admin
+├ ƒ /api/auth/change-password
+├ ƒ /api/auth/login
+├ ƒ /api/generate-invoice
+├ ƒ /api/modification-requests
+├ ƒ /api/settings
+├ ƒ /api/time-entries
+├ ○ /client
+└ ○ /login
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+[91mnpm notice
+npm notice New major version of npm available! 10.8.2 -> 11.7.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+npm notice To update run: npm install -g npm@11.7.0
+npm notice
+[0m ---> Removed intermediate container 9c8bcfcdce0a
+ ---> 68b56ef69148
+Step 16/28 : FROM base AS runner
+ ---> 9992b59c17bf
+Step 17/28 : WORKDIR /app
+ ---> Using cache
+ ---> 147ec403ad22
+Step 18/28 : ENV NODE_ENV=production
+ ---> Running in 1b10737e6592
+ ---> Removed intermediate container 1b10737e6592
+ ---> fca8825ee0b7
+Step 19/28 : RUN addgroup --system --gid 1001 nodejs
+ ---> Running in b6ef72b41a68
+ ---> Removed intermediate container b6ef72b41a68
+ ---> 69db0abac179
+Step 20/28 : RUN adduser --system --uid 1001 nextjs
+ ---> Running in d8041ac1b850
+ ---> Removed intermediate container d8041ac1b850
+ ---> 26743f423230
+Step 21/28 : COPY --from=builder /app/public ./public
+ ---> 9a2ac356d172
+Step 22/28 : COPY --from=builder /app/.next/standalone ./
+ ---> 962ac9aa51a1
+Step 23/28 : COPY --from=builder /app/.next/static ./.next/static
+ ---> ae45b6feeefc
+Step 24/28 : USER nextjs
+ ---> Running in 0b9a13bf7b2a
+ ---> Removed intermediate container 0b9a13bf7b2a
+ ---> c45ccbd26036
+Step 25/28 : EXPOSE 3000
+ ---> Running in 57d06a1181bb
+ ---> Removed intermediate container 57d06a1181bb
+ ---> 873141210a8a
+Step 26/28 : ENV PORT=3000
+ ---> Running in 11c8d3575b43
+ ---> Removed intermediate container 11c8d3575b43
+ ---> 7f506c54cf68
+Step 27/28 : ENV HOSTNAME="0.0.0.0"
+ ---> Running in 0f66080be087
+ ---> Removed intermediate container 0f66080be087
+ ---> ff2777f3620c
+Step 28/28 : CMD ["node", "server.js"]
+ ---> Running in 2d23648ba0ed
+ ---> Removed intermediate container 2d23648ba0ed
+ ---> 96c0c411174d
+Successfully built 96c0c411174d
+Successfully tagged gestion-heures-app:latest
+558fa56f0f6b271b9a150193cbe0ee4ff70e4276a7f3564f470f368d79a483a7
